@@ -1,0 +1,11 @@
+# ETF 组合分析与评估工具 · 依赖清单
+# 安装：pip install -r requirements.txt
+
+akshare        # ETF 历史行情 / 实时流动性数据源（东方财富、新浪）
+pandas         # 数据处理与表格
+numpy          # 数值计算
+matplotlib     # 绘图（相关性热力图、净值走势、权重饼图）
+nbformat       # 读写 .ipynb
+nbconvert      # 执行 / 转换 Notebook
+ipykernel      # Jupyter 内核
+ipywidgets     # fund_etf_spot_em 进度条依赖，缺失会导致流动性取不到

@@ -7,9 +7,15 @@
 ## 一、操作方法
 
 ### 1. 环境准备（首次）
-本机 Python 环境：`C:\Python313`。所需依赖已安装：
+本工具所需依赖已安装：
 `akshare、pandas、numpy、matplotlib、nbformat、nbconvert、ipykernel、ipywidgets`。
 如换机器，命令行执行一次即可：
+
+```
+pip install -r requirements.txt
+```
+
+或手动安装：
 
 ```
 pip install akshare pandas numpy matplotlib nbformat nbconvert ipykernel ipywidgets

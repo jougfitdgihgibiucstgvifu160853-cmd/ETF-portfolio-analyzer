@@ -1,6 +1,6 @@
 # ETF 组合分析与评估工具 · 使用说明与注意事项
 
-配套文件：`ETF组合分析与评估.ipynb`（主程序）、`ETF分析结果.xlsx`（运行后自动生成的导出结果）。
+配套文件：`ETF组合分析与评估.ipynb`（主程序）、`ETF分析报告.html`（运行后自动生成的可视化单页报告）、`ETF分析结果.xlsx`（运行后自动生成的导出结果）。
 
 ---
 
@@ -20,6 +20,7 @@ pip install akshare pandas numpy matplotlib nbformat nbconvert ipykernel ipywidg
 2. **只改第一个「参数配置区」单元格**（见下表）。
 3. 顶部菜单 `Kernel → Restart & Run All`，从上到下依次出表格、图、两份报告。
 4. 末尾自动导出 `ETF分析结果.xlsx`（6 个工作表）。
+5. 最后一格自动汇总全部结果，生成 `ETF分析报告.html`——一个样式美观、可直接用浏览器打开的单页可视化报告（KPI 卡片、彩色徽章分类、内嵌图表、热力相关性矩阵、两份文字报告，自包含无需联网）。
 
 ### 3. 配置区参数一览（只需改这一个单元格）
 
@@ -44,7 +45,8 @@ pip install akshare pandas numpy matplotlib nbformat nbconvert ipykernel ipywidg
 | `CORR_HIGH` | 相关性"过高/重叠"阈值 | `0.80` |
 | `AUTO_LIQUIDITY` | 是否自动取流动性 | `True` |
 | `MANUAL_LIQUIDITY` | 手填/覆盖流动性 | `{'某ETF':{'规模亿':50,'日均成交额万':8000,'折溢价':0.1}}` |
-| `OUTPUT_XLSX` | 导出文件名 | `'ETF分析结果.xlsx'` |
+| `OUTPUT_XLSX` | Excel 导出文件名 | `'ETF分析结果.xlsx'` |
+| `OUTPUT_HTML` | 可视化 HTML 报告文件名 | `'ETF分析报告.html'` |
 
 ### 4. 分类方法论（建候选池 → 过四道关 → 核心/卫星）
 - **关卡1 流动性**：规模≥10亿、日均成交额≥2000万、|折溢价|≤1%；
@@ -85,7 +87,7 @@ pip install akshare pandas numpy matplotlib nbformat nbconvert ipykernel ipywidg
 | 单只 ETF 定位+修改建议 | 模块7 | 按角色/波动/动量/相关性/夏普/折溢价档逐条建议 |
 | 组合综合评估报告+结论 | 模块8 | 绩效、核心/卫星仓位结构、分散度、集中度、风格定位、改进建议 |
 
-**额外增强**：四道关分类（核心/卫星/观察/淘汰）、QDII 折溢价三档评级、近20日动量+均线多头排列、可视化（相关性热力图/归一化净值/组合净值 vs 等权/权重饼图）、组合 vs 等权对比、Excel 6-sheet 导出。
+**额外增强**：四道关分类（核心/卫星/观察/淘汰）、QDII 折溢价三档评级、近20日动量+均线多头排列、可视化（相关性热力图/归一化净值/组合净值 vs 等权/权重饼图）、组合 vs 等权对比、Excel 6-sheet 导出、**一键生成样式美观的单页可视化 HTML 报告**（自包含、彩色徽章分类、内嵌图表、热力相关性矩阵）。
 
 ---
 

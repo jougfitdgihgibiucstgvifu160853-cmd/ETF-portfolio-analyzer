@@ -36,7 +36,7 @@ pip install akshare pandas numpy matplotlib nbformat nbconvert ipykernel ipywidg
 | `SCALE_MIN_YI` | 规模门槛（亿），低于淘汰 | `10` |
 | `TURNOVER_MIN_WAN` | 日均成交额门槛（万），低于淘汰 | `2000` |
 | `PREMIUM_CAP_PCT` | **普通** ETF 折溢价上限（%），超过淘汰 | `1.0` |
-| `QDII_PREMIUM_GOOD` | QDII/跨境折溢价「很棒」上限（%） | `5.0` |
+| `QDII_PREMIUM_GOOD` | QDII/跨境折溢价「正常」上限（%） | `5.0` |
 | `QDII_PREMIUM_WARN` | QDII/跨境折溢价「略有风险」上限（%），超过即「风险大」淘汰 | `8.0` |
 | `QDII_ETF` | 手动指定哪些算跨境（按名称） | `set()`，如 `{'某ETF'}` |
 | `QDII_KEYWORDS` | 名称含这些关键字自动按 QDII 识别 | 纳指/标普/道琼斯/恒生/港股/美国/原油… |
@@ -50,7 +50,7 @@ pip install akshare pandas numpy matplotlib nbformat nbconvert ipykernel ipywidg
 
 ### 4. 分类方法论（建候选池 → 过四道关 → 核心/卫星）
 - **关卡1 流动性**：规模≥10亿、日均成交额≥2000万、|折溢价|≤1%；
-  - **QDII/跨境折溢价三档**：`≤5% 很棒`（放行）、`5%~8% 略有风险`（仍放行但提示）、`>8% 风险大`（淘汰）。
+  - **QDII/跨境折溢价三档**：`≤5% 正常`（放行）、`5%~8% 略有风险`（仍放行但提示）、`>8% 风险大`（淘汰）。
   - 任一硬门槛不达标 → **淘汰**。
 - **关卡2 波动与回撤**：年化波动率 < 20% 且 最大回撤 > −10% → 可作 **核心**（求稳，约 70–80% 仓位）。
 - **关卡3 趋势与动量**：均线多头排列（MA5>MA10>MA20）或近20日动量为正，且区间收益为正 → 可作 **卫星**（求收益，约 20–30% 仓位）；否则 **观察**。
@@ -88,6 +88,64 @@ pip install akshare pandas numpy matplotlib nbformat nbconvert ipykernel ipywidg
 | 组合综合评估报告+结论 | 模块8 | 绩效、核心/卫星仓位结构、分散度、集中度、风格定位、改进建议 |
 
 **额外增强**：四道关分类（核心/卫星/观察/淘汰）、QDII 折溢价三档评级、近20日动量+均线多头排列、可视化（相关性热力图/归一化净值/组合净值 vs 等权/权重饼图）、组合 vs 等权对比、Excel 6-sheet 导出、**一键生成样式美观的单页可视化 HTML 报告**（自包含、彩色徽章分类、内嵌图表、热力相关性矩阵）。
+
+---
+
+## 四、代码结构与流程
+
+### 1. 整体数据流程图
+
+```mermaid
+flowchart TD
+    A["① 参数配置区<br/>ETF_LIST · PORTFOLIO · START/END · 各类门槛"] --> B
+
+    subgraph 取数与对齐
+        B["模块1 fetch_history()<br/>逐只爬取(东方财富/新浪) + 重试"] --> C["按共同交易日对齐<br/>price_df · amount_df · ret_df"]
+    end
+
+    C --> D["模块2 metrics()<br/>区间收益 / 年化波动 / 最大回撤 / 夏普 / 动量 / 多头排列<br/>→ metric_df"]
+    C --> E["模块3 流动性<br/>规模 · 日均成交额 · 折溢价<br/>(自动 fund_etf_spot_em + 手填覆盖) → liquidity_df"]
+
+    D --> F["模块4 四道关分类 classify()<br/>流动性→波动回撤→趋势动量→相关性<br/>→ score_df(核心/卫星/观察/淘汰)"]
+    E --> F
+    F -. premium_grade() .-> G["QDII 折溢价三档<br/>≤5% 正常 / 5%~8% 略有风险 / >8% 风险大"]
+
+    C --> H["模块5 相关性矩阵 corr<br/>+ 热力图"]
+    C --> I["模块6 净值走势 + simulate_portfolio()<br/>组合 vs 等权 · 权重饼图<br/>→ port_stats · eq_stats"]
+
+    F --> J["模块7 single_etf_report()<br/>单只定位 + 修改建议"]
+    F --> K["模块8 portfolio_report()<br/>组合综合评估 + 结论"]
+    I --> K
+
+    F --> L["模块9 导出 Excel<br/>6 个工作表"]
+    H --> L
+    E --> L
+
+    J --> M["模块10 汇总生成<br/>ETF分析报告.html（单页可视化）"]
+    K --> M
+    H --> M
+    I --> M
+    F --> M
+    M --> N["📊 浏览器打开<br/>KPI 卡片 · 彩色徽章 · 内嵌图表 · 文字报告"]
+```
+
+### 2. Notebook 单元格对照
+
+| 模块 | 主要函数 / 产物 | 作用 |
+|---|---|---|
+| 配置区 | `ETF_LIST`/`PORTFOLIO`/门槛参数 | 唯一需要手改的单元格 |
+| 模块1 | `fetch_history()` → `price_df`/`amount_df`/`ret_df` | 爬取并按交易日对齐 |
+| 模块2 | `metrics()`/`max_drawdown()`/`ma_bull()` → `metric_df` | 绩效与动量指标 |
+| 模块3 | 自动/手填流动性 → `liquidity_df` | 规模/成交额/折溢价 |
+| 模块4 | `classify()`/`premium_grade()` → `score_df` | 四道关分类 + QDII 三档 |
+| 模块5 | `ret_df.corr()` → `corr` | 相关性矩阵 + 热力图 |
+| 模块6 | `simulate_portfolio()` → `port_stats`/`eq_stats` | 净值走势 + 组合模拟 |
+| 模块7 | `single_etf_report()` | 单只 ETF 定位与建议 |
+| 模块8 | `portfolio_report()` | 组合综合评估报告 |
+| 模块9 | `pd.ExcelWriter` → `ETF分析结果.xlsx` | 6-sheet 导出 |
+| 模块10 | `_b64()`/`CHARTS` → `ETF分析报告.html` | 汇总全部结果的单页报告 |
+
+> 关键数据对象（贯穿全流程）：`price_df`（对齐收盘价）、`ret_df`（日收益）、`metric_df`（指标）、`liquidity_df`（流动性）、`score_df`（分类结论）、`corr`（相关性）、`port_stats`/`eq_stats`（组合绩效）、`CHARTS`（base64 图表）。
 
 ---
 
